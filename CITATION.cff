@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite the archived software release and the associated manuscript when available."
+title: "PREFLIGHT-PT: code for application-structured Clifford probes on QAOA workloads"
+type: software
+authors:
+  - family-names: Vishwakarma
+    given-names: Aishwarya
+    affiliation: University of Geneva
+    email: aishwarya.vishwakarma@unige.ch
+version: 1.0.0
+abstract: >-
+  Code-only release of core Python scripts for constructing, submitting and
+  analyzing application-structured Clifford probes and QAOA workload experiments
+  on IBM Heron processors. Research data and complete figure-reproduction
+  workflows are not included.
+license: MIT
+keywords:
+  - quantum computing
+  - QAOA
+  - Clifford circuits
+  - IBM Quantum
+  - quantum benchmarking
+  - calibration
