@@ -1,0 +1,38 @@
+# Environment and Python caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Credentials: do not commit to public repos
+.env
+*.env
+qiskit-ibm.json
+*apikey*
+*token*
+*credentials*
+
+# Hardware outputs, study input data, manuscripts
+results/
+data/
+*.qpy
+*.jsonl
+*.zip
+*.tar
+*.tar.gz
+figures/
+*.pdf
+*.png
+*.jpg
+*.tif
+*.tex
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
