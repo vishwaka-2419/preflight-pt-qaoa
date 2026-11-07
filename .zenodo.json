@@ -1,0 +1,22 @@
+{
+  "title": "PREFLIGHT-PT: code for compiled-circuit Clifford probes on QAOA workloads",
+  "upload_type": "software",
+  "version": "1.0.1",
+  "access_right": "open",
+  "license": "MIT",
+  "creators": [
+    {
+      "name": "Vishwakarma, Aishwarya",
+      "affiliation": "Department of Quantum Matter Physics, University of Geneva"
+    }
+  ],
+  "description": "<p>Code-only release of the Python scripts for constructing, submitting and analysing compiled-circuit Clifford probes and QAOA workload experiments on IBM Heron processors, supporting the article <em>Compiled-circuit Clifford probes predict QAOA performance beyond calibration scores on superconducting processors</em> (A. Vishwakarma, University of Geneva, 2026).</p><p>Version 1.0.1 adds, to the registered pipeline of version 1.0.0: the corrected output pairing as a builder option (<code>--output-pairing</code>; the default reproduces the executed circuits), the recovery of the readout-pair statistic from the executed measurements (<code>probe_pairing_check.py</code>), and the analysis scripts for the variants of the statistic, the direct-sampling comparison, the paired comparisons and the noise-model simulation (<code>ablations.py</code>, <code>paired72.py</code>, <code>sim_noise_models.py</code>, <code>make_extra_tables.py</code>).</p><p>Research data are not included. The derived per-edge correlator record and the analysis tables accompany the article as Supplementary Data; the raw record is available from the author on request.</p>",
+  "keywords": [
+    "quantum computing",
+    "QAOA",
+    "Clifford circuits",
+    "IBM Quantum",
+    "quantum benchmarking",
+    "calibration"
+  ]
+}
