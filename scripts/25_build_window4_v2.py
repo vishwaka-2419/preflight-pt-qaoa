@@ -113,6 +113,22 @@ def pauli_axes(pauli: Pauli) -> dict[int, str]:
     }
 
 
+def readout_map(workload: QuantumCircuit, active: list[int]) -> dict[int, int]:
+    """Map each classical bit (vertex) u of the workload to the position, within `active`,
+    of the physical qubit that the workload measures into bit u. The compiler's layout and
+    routing permute the vertices within the subset, so this map is not the identity."""
+    position = {int(q): i for i, q in enumerate(active)}
+    out: dict[int, int] = {}
+    for item in workload.data:
+        if str(item.operation.name) == "measure":
+            q = int(workload.find_bit(item.qubits[0]).index)
+            c = int(workload.find_bit(item.clbits[0]).index)
+            out[c] = position[q]
+    if sorted(out) != list(range(len(active))):
+        raise RuntimeError("Workload does not measure every vertex exactly once on the active subset.")
+    return out
+
+
 def prep_balanced(circuit: QuantumCircuit, qubit: int, axis: str, sign: int) -> None:
     minus = int(sign) < 0
     if axis == "Z":
@@ -152,15 +168,17 @@ def find_sign_twirls(
     twirls: int,
     rng: random.Random,
     max_attempts: int = 2000,
+    readout: dict[int, int] | None = None,
 ) -> list[tuple[dict[int, int], dict[str, int]]]:
     if twirls < 4:
         raise ValueError("At least four sign twirls are required.")
     n = small_body.num_qubits
     observables = {}
     for u, v in edges:
+        a, b = (readout[u], readout[v]) if readout is not None else (u, v)
         label = ["I"] * n
-        label[u] = "Z"
-        label[v] = "Z"
+        label[a] = "Z"
+        label[b] = "Z"
         observables[(u, v)] = Pauli("".join(reversed(label)))
 
     for _ in range(max_attempts):
@@ -196,6 +214,13 @@ def main() -> None:
     ap.add_argument("--edge-twirls", type=int, default=8)
     ap.add_argument("--edge-shots", type=int, default=64)
     ap.add_argument("--no-edge-probe", action="store_true")
+    ap.add_argument(
+        "--output-pairing",
+        choices=("registered", "readout"),
+        default="registered",
+        help="registered: vertex u on the u-th qubit of the sorted subset (reproduces the executed circuits); "
+        "readout: vertex u on the qubit that the workload measures into classical bit u.",
+    )
     ap.add_argument("--label", default="window4_v2")
     ap.add_argument("--protocol-file", default="protocols/WINDOW4_V2_PROTOCOL.md")
     ap.add_argument("--seconds-per-shot", type=float, default=0.00028)
@@ -282,11 +307,15 @@ def main() -> None:
         body = snap_body(workload)
         clifford, small_body = local_clifford(body, active)
         n = len(active)
+        if args.output_pairing == "readout":
+            readout = readout_map(workload, active)
+        else:
+            readout = {u: u for u in range(n)}
         propagated = {}
         for u, v, _weight in common["edges"]:
             label = ["I"] * n
-            label[int(u)] = "Z"
-            label[int(v)] = "Z"
+            label[readout[int(u)]] = "Z"
+            label[readout[int(v)]] = "Z"
             propagated[(int(u), int(v))] = Pauli("".join(reversed(label))).evolve(clifford, frame="h")
 
         groups: list[dict[str, Any]] = []
@@ -307,6 +336,7 @@ def main() -> None:
                 group["edges"],
                 args.edge_twirls,
                 rng,
+                readout=readout,
             )
             for twirl_index, (signs, ideal) in enumerate(designs):
                 probe = QuantumCircuit(workload.num_qubits, n, name=f"edge_probe_{source_index}_{group_index}_{twirl_index}")
@@ -317,8 +347,8 @@ def main() -> None:
                     qargs = [probe.qubits[int(body.find_bit(q).index)] for q in item.qubits]
                     probe.append(item.operation, qargs, [])
                 probe.barrier(*active)
-                for local_q, physical_q in enumerate(active):
-                    probe.measure(physical_q, local_q)
+                for vertex, local_q in sorted(readout.items()):
+                    probe.measure(active[local_q], vertex)
                 if probe.count_ops().get("cz", 0) != workload.count_ops().get("cz", 0):
                     raise RuntimeError("Edge probe body CZ count differs from workload.")
                 pubs.append(
